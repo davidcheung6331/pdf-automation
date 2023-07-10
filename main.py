@@ -32,42 +32,51 @@ system_openai_api_key = os.environ.get('OPENAI_API_KEY')
 system_openai_api_key = st.text_input(":key: Step 1: Enter your OpenAI Key :", value=system_openai_api_key)
 os.environ["OPENAI_API_KEY"] = system_openai_api_key
 
+log = ""
 
-st.caption("Import a PDF File")
-uploaded_file = st.file_uploader("Step 2 : 📂 upload PDF file", type=['pdf'])
+st.subheader("Step 2 : Upload a PDF File")
+uploaded_file = st.file_uploader("Select file", type=['pdf'])
 if uploaded_file is not None:
-    # loader = PyPDFLoader(uploaded_file.name)
-
     # Save the uploaded file to a temporary location
     temp_dir = tempfile.TemporaryDirectory()
-    st.caption(temp_dir)
+    log = log + "\n Temporary Directory : " + temp_dir.name
+
     temp_file_path = os.path.join(temp_dir.name, uploaded_file.name)
-    st.caption(temp_file_path)
+    log = log + "\n Full File Path : " + temp_file_path
+
     with open(temp_file_path, 'wb') as temp_file:
         temp_file.write(uploaded_file.read())
+    log = log + "\n Create the temp file"
 
     # Create the PyPDFLoader using the temporary file path
     loader = PyPDFLoader(temp_file_path)
- 
-
+    log = log + "\n Load the Pdf file" 
 
     pages = loader.load_and_split()
     no_of_pages = len(pages)
-    st.caption(uploaded_file.name + " was splitted into  : " + str(no_of_pages) + " page(s)" )
+    log = log + "\n" + uploaded_file.name + " was splitted into  : " + str(no_of_pages) + " page(s)" 
     
     if (no_of_pages>0):
-        st.caption("Following are First Sample page content and ready to create embedding") 
-        st.info(pages[0].page_content)
+        log = log + "\nFollowing are First Sample page content and ready to create embedding"
+        log = log + "\n" + pages[0].page_content
 
         embeddings = OpenAIEmbeddings()
+        log = log + "\nCreate LLM embedding"
         vectordb = Chroma.from_documents(pages, embedding=embeddings,
                                     persist_directory=".")
+        log = log + "\nCreate Vector DB"
         vectordb.persist()
         pdf_qa = ChatVectorDBChain.from_llm(OpenAI(temperature=0.9, model_name="gpt-3.5-turbo"),
                                         vectordb, return_source_documents=False)
-
+        log = log + "\nConnect LLM embedding and  Vector DB"
     
-        st.caption("Enter the Prompt:")
+
+        with st.expander("For details, click here"):
+            st.code(log)
+
+
+
+        st.subheader("Step 3 : Enter the Prompt:")
         query = "What are the skillset?"
         query = st.text_area("Enter your prompt", query)
         if st.button("Generate"):
