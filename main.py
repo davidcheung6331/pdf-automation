@@ -5,7 +5,7 @@ from langchain.chains import ChatVectorDBChain # for chatting with the pdf
 from langchain.llms import OpenAI # the LLM model we'll use (CHatGPT)
 import streamlit as st
 import os
-
+import tempfile
 
 # requirements.txt
 # chromadb
@@ -36,7 +36,21 @@ os.environ["OPENAI_API_KEY"] = system_openai_api_key
 st.caption("Import a PDF File")
 uploaded_file = st.file_uploader("Step 2 : 📂 upload PDF file", type=['pdf'])
 if uploaded_file is not None:
-    loader = PyPDFLoader(uploaded_file.name)
+    # loader = PyPDFLoader(uploaded_file.name)
+
+    # Save the uploaded file to a temporary location
+    temp_dir = tempfile.TemporaryDirectory()
+    st.caption(temp_dir)
+    temp_file_path = os.path.join(temp_dir.name, uploaded_file.name)
+    st.caption(temp_file_path)
+    with open(temp_file_path, 'wb') as temp_file:
+        temp_file.write(uploaded_file.read())
+
+    # Create the PyPDFLoader using the temporary file path
+    loader = PyPDFLoader(temp_file_path)
+ 
+
+
     pages = loader.load_and_split()
     no_of_pages = len(pages)
     st.caption(uploaded_file.name + " was splitted into  : " + str(no_of_pages) + " page(s)" )
