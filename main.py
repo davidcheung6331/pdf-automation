@@ -85,12 +85,13 @@ if uploaded_file is not None:
 
 
 
-        st.subheader("blue:[Step 3 : ✍️ Enter the Prompt:]")
+        st.subheader(":blue[Step 3 : ✍️ Enter the Prompt:]")
         query = "What are the skillset?"
         query = st.text_area("Enter your prompt", query)
         if st.button("Generate"):
             with st.spinner("Generating ...."):
                 result = pdf_qa({"question": query, "chat_history": ""})
+                st.text_area("Result", result)
                 st.info(result)
-
+                st.code(result)
         
