@@ -6,6 +6,7 @@ from langchain.llms import OpenAI # the LLM model we'll use (CHatGPT)
 import streamlit as st
 import os
 import tempfile
+from PIL import Image
 
 # requirements.txt
 # chromadb
@@ -15,7 +16,7 @@ import tempfile
 
 
 st.set_page_config(
-    page_title="CSV Analysis",
+    page_title="PDF Reader",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -28,36 +29,44 @@ hide_menu_style = """
         """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
 
+image = Image.open("pdf-banner.jpg")
+st.image(image, caption='created by MJ')
+
+
+
+st.subheader(":blue[Step 1 : 🔑 Setup your OpenAI key]")
 system_openai_api_key = os.environ.get('OPENAI_API_KEY')
-system_openai_api_key = st.text_input(":key: Step 1: Enter your OpenAI Key :", value=system_openai_api_key)
+system_openai_api_key = st.text_input("Enter your Key :", value=system_openai_api_key)
 os.environ["OPENAI_API_KEY"] = system_openai_api_key
 
 log = ""
 
-st.subheader("Step 2 : Upload a PDF File")
+
+
+st.subheader(":blue[Step 2 : 📁 Upload a PDF File]")
 uploaded_file = st.file_uploader("Select file", type=['pdf'])
 if uploaded_file is not None:
     # Save the uploaded file to a temporary location
     temp_dir = tempfile.TemporaryDirectory()
-    log = log + "\n Temporary Directory : " + temp_dir.name
+    log = log + "\nTemporary Directory : " + temp_dir.name
 
     temp_file_path = os.path.join(temp_dir.name, uploaded_file.name)
-    log = log + "\n Full File Path : " + temp_file_path
+    log = log + "\nFull File Path : " + temp_file_path
 
     with open(temp_file_path, 'wb') as temp_file:
         temp_file.write(uploaded_file.read())
-    log = log + "\n Create the temp file"
+    log = log + "\nCreate the temp file"
 
     # Create the PyPDFLoader using the temporary file path
     loader = PyPDFLoader(temp_file_path)
-    log = log + "\n Load the Pdf file" 
+    log = log + "\nLoad the Pdf file" 
 
     pages = loader.load_and_split()
     no_of_pages = len(pages)
     log = log + "\n" + uploaded_file.name + " was splitted into  : " + str(no_of_pages) + " page(s)" 
     
     if (no_of_pages>0):
-        log = log + "\nFollowing are First Sample page content and ready to create embedding"
+        log = log + "\n\nFollowing are First Sample page content and ready to create embedding"
         log = log + "\n" + pages[0].page_content
 
         embeddings = OpenAIEmbeddings()
@@ -76,7 +85,7 @@ if uploaded_file is not None:
 
 
 
-        st.subheader("Step 3 : Enter the Prompt:")
+        st.subheader("blue:[Step 3 : ✍️ Enter the Prompt:]")
         query = "What are the skillset?"
         query = st.text_area("Enter your prompt", query)
         if st.button("Generate"):
